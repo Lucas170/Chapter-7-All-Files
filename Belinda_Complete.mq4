@@ -22,7 +22,7 @@
       Trailing stop of 30 pips
    
       BELINDA POSITION SIZING RULE:
-      Sizing based on account size
+      1 Lot
    */
 
 #define SIGNAL_NONE 0
@@ -33,6 +33,8 @@
 
 #property copyright "Expert Advisor Builder"
 #property link      "http://sufx.core.t3-ism.net/ExpertAdvisorBuilder/"
+
+// TDL 4: Create Extern for all Entry Parameters
 
 extern int MagicNumber = 12345;
 extern bool SignalMail = False;
@@ -50,18 +52,14 @@ extern int sma_long = 40;
 extern int atr_period = 20;
 extern int atr_shift = 11;
 
-// TDL 1: Declare Risk Variable and Trigger
-
-extern bool isSizingOn = true;
-extern double Risk = 1;
-
 int P = 1;
 int Order = SIGNAL_NONE;
 int Total, Ticket, Ticket2;
 double StopLossLevel, TakeProfitLevel, StopLevel;
 double sma10_1, sma10_2, sma40_1, sma40_2;
+
+// TDL 1: Declare variables
 double atr_current, atr_past;
-bool isYenPair = false;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -69,7 +67,6 @@ bool isYenPair = false;
 int init() {
    
    if(Digits == 5 || Digits == 3 || Digits == 1)P = 10;else P = 1; // To account for 5 digit brokers
-   if(Digits == 3 || Digits == 2) isYenPair = true; // Adjust for YenPair
 
    return(0);
 }
@@ -102,6 +99,8 @@ int start() {
    sma40_1 = iMA(NULL, 0, sma_long, 0, MODE_SMA, PRICE_CLOSE, 1); // d
    sma40_2 = iMA(NULL, 0, sma_long, 0, MODE_SMA, PRICE_CLOSE, 2); // a
    
+   // TDL 2: Define ATR values
+   
    atr_current = iATR(NULL, 0, atr_period, 1);    // ATR(20) now
    atr_past = iATR(NULL, 0, atr_period, atr_shift);      // ATR(20) 10 periods ago
    
@@ -109,13 +108,7 @@ int start() {
 
    if (StopLoss < StopLevel) StopLoss = StopLevel;
    if (TakeProfit < StopLevel) TakeProfit = StopLevel;
-   
-   // TDL 2: Add Sizing Algo
-   if (isSizingOn == true) {
-      Lots = Risk * 0.01 * AccountBalance() / (MarketInfo(Symbol(),MODE_LOTSIZE) * StopLoss * P * Point); // Sizing Algo based on account size
-      if(isYenPair == true) Lots = Lots * 100; // Adjust for Yen Pairs
-      Lots = NormalizeDouble(Lots, 2); // Round to 2 decimal place
-   }
+
    //+------------------------------------------------------------------+
    //| Variable Setup - END                                             |
    //+------------------------------------------------------------------+
@@ -178,6 +171,7 @@ int start() {
             if (Order == SIGNAL_CLOSESELL) {
                Ticket2 = OrderClose(OrderTicket(), OrderLots(), Ask, Slippage, DarkOrange);
                if (SignalMail) SendMail("[Signal Alert]", "[" + Symbol() + "] " + DoubleToStr(Ask, Digits) + " Close Sell");
+               IsTrade = False;
                continue;
             }
             //Trailing stop
@@ -202,6 +196,8 @@ int start() {
       Enter a long trade when SMA(10) crosses SMA(40) from bottom
       Enter a short trade when SMA(10) crosses SMA(40) from top
    */
+   
+   // TDL 3: Add volatility rule
    
    if (atr_current > atr_past) {
    
