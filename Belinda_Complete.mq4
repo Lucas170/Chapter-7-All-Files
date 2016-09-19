@@ -127,7 +127,7 @@ int start() {
    atr_current = iATR(NULL, 0, atr_period, 1);    // ATR(20) now
    atr_past = iATR(NULL, 0, atr_period, atr_shift);      // ATR(20) 10 periods ago
    
-   StopLevel = MarketInfo(Symbol(), MODE_STOPLEVEL) + MarketInfo(Symbol(), MODE_SPREAD); // Defining minimum StopLevel
+   StopLevel = (MarketInfo(Symbol(), MODE_STOPLEVEL) + MarketInfo(Symbol(), MODE_SPREAD)) / P;// Defining minimum StopLevel
 
    if (StopLoss < StopLevel) StopLoss = StopLevel;
    if (TakeProfit < StopLevel) TakeProfit = StopLevel;
